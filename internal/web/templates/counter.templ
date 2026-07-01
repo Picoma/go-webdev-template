@@ -1,0 +1,44 @@
+package templates
+
+templ CounterValue(value int64) {
+	<span
+		id="counter-value"
+		class="text-6xl font-bold tabular-nums"
+	>
+		{ value }
+	</span>
+}
+
+templ CounterPage(value int64) {
+	@Base() {
+		<div class="hero min-h-screen">
+			<div class="hero-content w-full max-w-md">
+				<div class="card bg-base-100 shadow-xl w-full">
+					<div class="card-body items-center text-center gap-6">
+						<h1 class="card-title text-3xl">
+							Counter
+						</h1>
+						<div class="stats shadow">
+							<div class="stat place-items-center">
+								<div class="stat-title">
+									Current value
+								</div>
+								<div class="stat-value">
+									@CounterValue(value)
+								</div>
+							</div>
+						</div>
+						<button
+							class="btn btn-primary btn-lg"
+							hx-post="/counter"
+							hx-target="#counter-value"
+							hx-swap="outerHTML"
+						>
+							Increment
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}

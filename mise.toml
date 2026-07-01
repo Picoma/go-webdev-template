@@ -1,0 +1,70 @@
+[tools]
+usage = "latest"
+go = "latest"
+"go:github.com/a-h/templ/cmd/templ" = "latest"
+"go:github.com/pressly/goose/v3/cmd/goose" = "latest"
+sqlc = "latest"
+goreleaser = "latest"
+node = "latest"
+upx = "latest"
+
+[env]
+_.path = 'dist'
+IDP_DB_STRING = "./tmp/test.db"
+GOOSE_DRIVER = "sqlite3"
+GOOSE_DBSTRING = "./tmp/test.db"
+GOOSE_MIGRATION_DIR = "internal/db/migrations"
+
+[tasks.app]
+description = "Run the application"
+usage = '''
+flag "-d --display <display>" help="Display format :raw(default), human or nested" {
+  choices "raw" "human" "nested"
+}
+'''
+run = '''
+# Running application
+case "${usage_display:-}" in
+  human)
+    go run . run --debug -f | sed 's/\[2m/\n\[2m/g'
+    ;;
+  nested)
+    go run . run --debug | jq 'reduce to_entries[] as $kv ({}; setpath($kv.key|split("."); $kv.value))'
+    ;;
+    *)
+    go run . run --debug | jq
+    ;;
+esac
+'''
+
+[tasks."app:build"]
+run = "goreleaser release --snapshot --clean"
+
+[tasks.pre-commit]
+description = "Run tests, benches and linters"
+run = '''
+set -euo pipefail
+echo === Tests ===
+go test ./...
+# TODO Bench
+echo
+echo === Lint ===
+echo "GolangCI : $(golangci-lint run --fix --issues-exit-code 2>/dev/null)"
+echo "Templ\t : $(templ fmt . --fail 2>&1)"
+'''
+
+[tasks."app:clean"]
+description = "Remove build artifacts"
+run = '''
+echo "Cleaning..."
+rm -rf dist tmp
+find -name '*_templ.go' -delete
+find internal/db/queries -name '*.go' -delete
+'''
+
+[tasks."db:create"]
+run = '''
+mkdir -p tmp
+touch tmp/test.db
+goose up
+'''
