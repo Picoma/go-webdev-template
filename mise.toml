@@ -7,6 +7,7 @@ sqlc = "latest"
 goreleaser = "latest"
 node = "latest"
 upx = "latest"
+"go:github.com/aarzilli/whydeadcode" = "latest"
 
 [env]
 _.path = 'dist'

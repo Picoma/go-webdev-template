@@ -18,6 +18,8 @@ builds:
       # - arm64
       - amd64
       # - "386"
+    flags:
+      - -trimpath
     ldflags:
       - -s
       - -w

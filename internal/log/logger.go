@@ -8,6 +8,8 @@ import (
 	"idp/internal/config"
 
 	"github.com/lmittmann/tint"
+	slogformatter "github.com/samber/slog-formatter"
+	slogmulti "github.com/samber/slog-multi"
 )
 
 func New(w io.Writer, cfg *config.Config) *slog.Logger {
@@ -24,11 +26,23 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 			TimeFormat: time.TimeOnly,
 		})
 	} else {
-		slogHandler = slog.NewJSONHandler(w, &slog.HandlerOptions{
-			AddSource:   cfg.Debug,
-			Level:       level,
-			ReplaceAttr: cfg.LoggingSchema.ReplaceAttr,
-		})
+		// TODO create lib unifying context values, slog.Logger (json, flattened), and OTEL semantics
+		// inspiré de codeberg.org/shimeoki/line, davantage intégré avec slog + sémantique OTEL
+		//
+		// For now this shit will have to do, but it is really incomfortable
+		slogHandler = slogmulti.Pipe(
+			slogformatter.FlattenFormatterMiddlewareOptions{
+				Separator:  ".",
+				Prefix:     "",
+				IgnorePath: false,
+			}.NewFlattenFormatterMiddlewareOptions(),
+		).Handler(
+			slog.NewJSONHandler(w, &slog.HandlerOptions{
+				AddSource:   cfg.Debug,
+				Level:       level,
+				ReplaceAttr: cfg.LoggingSchema.ReplaceAttr,
+			}),
+		)
 	}
 
 	logger := slog.New(slogHandler).With(

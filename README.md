@@ -68,6 +68,6 @@ make clean
 features :
 - get started quick
 - focus on platform not tech:
-  - OTEL-compatible wide events
-  - Debug mode with flame graphs (TODO écrire mode op)
+  - OTEL-compatible wide events (aka canonical log event)
+  - low-level debugging mode with flame graphs, tracing OOB (TODO écrire mode op)
   - embedded migrations
