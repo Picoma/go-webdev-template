@@ -13,10 +13,10 @@ import (
 )
 
 //nolint:mnd // Package-wide configuration options, not exposed to final user
-func registerMiddleware(r chi.Router, _ *config.Config, logger *slog.Logger) {
+func registerMiddleware(r chi.Router, cfg *config.Config, logger *slog.Logger) {
 	loggingOptions := httplog.Options{
-		Level: slog.LevelInfo,
-		// Schema:        &cfg.TintedLogs,
+		Level:         slog.LevelInfo,
+		Schema:        cfg.LoggingSchema,
 		RecoverPanics: true,
 		Skip: func(_ *http.Request, status int) bool {
 			return status == 404 || status == 405

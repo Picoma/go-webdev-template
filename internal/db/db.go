@@ -26,8 +26,8 @@ type DB struct {
 
 func Open(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*DB, error) {
 	logger = logger.WithGroup("db").With(
-		slog.String("string", cfg.DB.ConnString),
-		slog.String("driver", cfg.DB.Driver),
+		slog.String("server.address", cfg.DB.ConnString),
+		slog.String("system.name", cfg.DB.Driver),
 	)
 
 	// Open connection

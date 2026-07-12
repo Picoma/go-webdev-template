@@ -25,9 +25,9 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 		})
 	} else {
 		slogHandler = slog.NewJSONHandler(w, &slog.HandlerOptions{
-			AddSource: cfg.Debug,
-			Level:     level,
-			// ReplaceAttr: format.ReplaceAttr,
+			AddSource:   cfg.Debug,
+			Level:       level,
+			ReplaceAttr: cfg.LoggingSchema.ReplaceAttr,
 		})
 	}
 

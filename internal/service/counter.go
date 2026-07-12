@@ -30,12 +30,14 @@ func NewCountService(q CounterStore) *CountService {
 func (s *CountService) Get(ctx context.Context) (int64, error) {
 	value, err := s.store.GetCounter(ctx)
 
-	httplog.SetAttrs(ctx, slog.Any(
-		"sql", map[string]any{
-			"query": queries.GetCounter,
-			// query params
-		},
-	))
+	httplog.SetAttrs(ctx,
+		slog.String("db.query.text", queries.GetCounter),
+		// slog.String("db.query.parameter.<key>", <key>),
+		slog.String("db.namespace", "counter"),
+		slog.String("db.operation.name", "SELECT"),
+		slog.String("db.stored_procedure.name", "GetCounter"),
+		slog.String("db.response.returned_rows", "1"),
+	)
 
 	if err != nil {
 		return 0, fmt.Errorf("error getting counter: %w", err)
@@ -47,12 +49,14 @@ func (s *CountService) Get(ctx context.Context) (int64, error) {
 func (s *CountService) Increment(ctx context.Context) (int64, error) {
 	value, err := s.store.IncrementAndGetCounter(ctx)
 
-	httplog.SetAttrs(ctx, slog.Any(
-		"sql", map[string]any{
-			"query": queries.IncrementAndGetCounter,
-			// query params
-		},
-	))
+	httplog.SetAttrs(ctx,
+		slog.String("db.query.text", queries.IncrementAndGetCounter),
+		// slog.String("db.query.parameter.<key>", <key>),
+		slog.String("db.namespace", "counter"),
+		slog.String("db.operation.name", "INSERT"),
+		slog.String("db.stored_procedure.name", "IncrementAndGetCounter"),
+		slog.String("db.response.returned_rows", "1"),
+	)
 
 	if err != nil {
 		return 0, fmt.Errorf("error incrementing counter: %w", err)

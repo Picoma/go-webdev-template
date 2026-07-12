@@ -35,8 +35,8 @@ func (app *App) Run(ctx context.Context) error {
 			app.logger.ErrorContext(ctx, msg,
 				slog.String("server.address", app.server.Addr),
 				slog.String("server.status", "crashed"),
-				slog.String("exception.type", "listen_error"),
-				slog.Any("exception.message", err),
+				slog.String(app.cfg.LoggingSchema.ErrorType, "listen_error"),
+				slog.Any(app.cfg.LoggingSchema.ErrorMessage, err),
 			)
 			return fmt.Errorf("%s: %w", msg, err)
 		}
@@ -53,8 +53,8 @@ func (app *App) Run(ctx context.Context) error {
 			app.logger.ErrorContext(ctx, msg,
 				slog.String("server.address", app.server.Addr),
 				slog.String("server.status", "crashed"),
-				slog.String("exception.type", "shutdown_error"),
-				slog.Any("exception.message", err),
+				slog.String(app.cfg.LoggingSchema.ErrorType, "shutdown_error"),
+				slog.Any(app.cfg.LoggingSchema.ErrorMessage, err),
 			)
 			return fmt.Errorf("%s: %w", msg, err)
 		}

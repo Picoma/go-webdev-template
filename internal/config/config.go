@@ -2,6 +2,8 @@ package config
 
 import (
 	"time"
+
+	"github.com/go-chi/httplog/v3"
 )
 
 type Service struct {
@@ -33,8 +35,9 @@ type Config struct {
 	DB      DB
 	Server  Server
 
-	Debug      bool
-	TintedLogs bool
+	Debug         bool
+	TintedLogs    bool
+	LoggingSchema *httplog.Schema
 }
 
 func Defaults(service Service) *Config {
@@ -55,7 +58,8 @@ func Defaults(service Service) *Config {
 			IdleTimeout:     time.Minute,
 			ShutdownTimeout: 30 * time.Second,
 		},
-		Debug:      false, // Set in CLI
-		TintedLogs: false,
+		Debug:         false, // Set in CLI
+		TintedLogs:    false,
+		LoggingSchema: httplog.SchemaOTEL,
 	}
 }
