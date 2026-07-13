@@ -22,6 +22,7 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "format-logs",
+				Usage:       "log events in human readable format",
 				Aliases:     []string{"f"},
 				Sources:     cli.EnvVars("IDP_FORMAT_LOGS"),
 				Destination: &cfg.TintedLogs,
@@ -29,14 +30,14 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 			},
 			&cli.BoolFlag{
 				Name:        "debug",
-				Usage:       "Enable debug mode",
+				Usage:       "enable debug mode",
 				Sources:     cli.EnvVars("IDP_DEBUG"),
-				Destination: &cfg.Debug,
+				Destination: &cfg.Verbose,
 				Value:       false,
 			},
 			&cli.StringFlag{
 				Name:        "db-string",
-				Usage:       "Database connection string",
+				Usage:       "database connection string",
 				Sources:     cli.EnvVars("IDP_DB_STRING"),
 				Destination: &cfg.DB.ConnString,
 				Value:       "idp.sqlite",

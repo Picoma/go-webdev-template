@@ -22,7 +22,7 @@ func TestNew(t *testing.T) {
 		},
 		Server:     config.Server{Port: 8080},
 		TintedLogs: false,
-		Debug:      false,
+		Verbose:    false,
 	})
 
 	if err != nil {
@@ -47,7 +47,7 @@ func TestAppClose(t *testing.T) {
 		Server:     config.Server{Port: 8080},
 		Service:    config.Service{Version: "test"},
 		TintedLogs: false,
-		Debug:      false,
+		Verbose:    false,
 	})
 
 	if err != nil {

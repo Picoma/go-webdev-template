@@ -19,7 +19,7 @@ func registerRoutes(
 	r.Group(func(r chi.Router) {
 		r.Get("/", http.RedirectHandler("/counter", http.StatusMovedPermanently).ServeHTTP)
 		r.Get("/health", handler.HealthHandler(db))
-		if cfg.Debug {
+		if cfg.WithDebug {
 			r.Mount("/debug", middleware.Profiler())
 		}
 	})

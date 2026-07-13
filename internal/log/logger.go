@@ -14,7 +14,7 @@ import (
 
 func New(w io.Writer, cfg *config.Config) *slog.Logger {
 	level := slog.LevelInfo
-	if cfg.Debug {
+	if cfg.Verbose {
 		level = slog.LevelDebug
 	}
 
@@ -22,7 +22,7 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 	if cfg.TintedLogs {
 		slogHandler = tint.NewHandler(w, &tint.Options{
 			Level:      level,
-			AddSource:  cfg.Debug,
+			AddSource:  cfg.Verbose,
 			TimeFormat: time.TimeOnly,
 		})
 	} else {
@@ -38,7 +38,7 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 			}.NewFlattenFormatterMiddlewareOptions(),
 		).Handler(
 			slog.NewJSONHandler(w, &slog.HandlerOptions{
-				AddSource:   cfg.Debug,
+				AddSource:   cfg.Verbose,
 				Level:       level,
 				ReplaceAttr: cfg.LoggingSchema.ReplaceAttr,
 			}),

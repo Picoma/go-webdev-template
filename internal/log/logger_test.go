@@ -35,7 +35,7 @@ func TestNewLogger(t *testing.T) {
 					Version: "test",
 					Env:     "test",
 				},
-				Debug: true,
+				Verbose: true,
 			},
 			want: slog.LevelDebug,
 		},

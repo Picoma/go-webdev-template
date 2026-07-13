@@ -35,7 +35,8 @@ type Config struct {
 	DB      DB
 	Server  Server
 
-	Debug         bool
+	WithDebug     bool
+	Verbose       bool
 	TintedLogs    bool
 	LoggingSchema *httplog.Schema
 }
@@ -58,7 +59,8 @@ func Defaults(service Service) *Config {
 			IdleTimeout:     time.Minute,
 			ShutdownTimeout: 30 * time.Second,
 		},
-		Debug:         false, // Set in CLI
+		WithDebug:     false, // Set in CLI
+		Verbose:       false, // Set in CLI
 		TintedLogs:    false,
 		LoggingSchema: httplog.SchemaOTEL,
 	}
