@@ -29,9 +29,10 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 				Value:       false,
 			},
 			&cli.BoolFlag{
-				Name:        "debug",
-				Usage:       "enable debug mode",
-				Sources:     cli.EnvVars("IDP_DEBUG"),
+				Name:        "verbose",
+				Aliases:     []string{"v"},
+				Usage:       "verbose output",
+				Sources:     cli.EnvVars("IDP_VERBOSE"),
 				Destination: &cfg.Verbose,
 				Value:       false,
 			},

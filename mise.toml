@@ -1,21 +1,26 @@
 [tools]
-# mise
-usage = "latest"
-# Go code
-go = "latest"
-"go:github.com/a-h/templ/cmd/templ" = "latest"
-"go:github.com/pressly/goose/v3/cmd/goose" = "latest"
-sqlc = "latest"
-# Go dev tools
-goreleaser = "latest"
-upx = "latest"
-"go:github.com/aarzilli/whydeadcode" = "latest"
-"go:go.uber.org/nilaway/cmd/nilaway" = "latest"
-# frontend gen
-node = "latest"
+"usage" = "latest" # Mise completion spec for tasks
+
+"go"                                       = "1.26.4" # i dunno what it is
+"go:github.com/pressly/goose/v3/cmd/goose" = "latest" # (embedded) database migrations
+"go:github.com/a-h/templ/cmd/templ"        = "latest" # Go generator for web templats
+"sqlc"                                     = "latest" # Go generator for SQL queries
+
+"golangci-lint"                      = "latest" # Extensive Go linter
+"go:go.uber.org/nilaway/cmd/nilaway" = "latest" # Additionnal linter alerting on potential nil value panics
+                                                # *could* be embedded in golangci-lint by custom building the latter,
+                                                # but that's a chore
+
+# cf https://www.datadoghq.com/blog/engineering/agent-go-binaries/
+"goreleaser"                                    = "latest" # Pipeliner to build & release binaries
+"upx"                                           = "latest" # Build artifact compressor, configured in .goreleaser.yaml
+"go:github.com/loov/goda"                       = "latest" # Golang Dependancy Analyser : who depends on what, what packages are heaviest
+"go:github.com/Zxilly/go-size-analyzer/cmd/gsa" = "latest" # Analyze binary size by package installed.
+
+"node"            = "latest" # provides npm
+"npm:tailwindcss" = "latest" # generates css from templates
 
 [env]
-_.path = 'dist'
 IDP_DB_STRING = "./tmp/test.db"
 GOOSE_DRIVER = "sqlite3"
 GOOSE_DBSTRING = "./tmp/test.db"
