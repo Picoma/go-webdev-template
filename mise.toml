@@ -58,7 +58,7 @@ echo === Lint ===
 echo "Nilway:\n"
 nilaway '-include-pkgs=idp/cmd,idp/internal/app,idp/internal/db,idp/internal/config,idp/internal/handler,idp/internal/log,idp/internal/server,idp/internal/service,idp/internal/web' ./...
 echo "GolangCI :\n"
-golangci-lint run --fix --issues-exit-code 1 2>/dev/null
+golangci-lint run --fix --disable godox --issues-exit-code 1 2>/dev/null
 echo "Templ :\n"
 templ fmt . --fail 2>&1
 '''

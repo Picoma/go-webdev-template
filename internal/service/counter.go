@@ -7,7 +7,7 @@ import (
 
 	"idp/internal/db/queries"
 
-	"github.com/go-chi/httplog/v3"
+	slogchi "github.com/samber/slog-chi"
 )
 
 type CounterStore interface {
@@ -30,13 +30,12 @@ func NewCountService(q CounterStore) *CountService {
 func (s *CountService) Get(ctx context.Context) (int64, error) {
 	value, err := s.store.GetCounter(ctx)
 
-	httplog.SetAttrs(ctx,
-		slog.String("db.query.text", queries.GetCounter),
-		// slog.String("db.query.parameter.<key>", <key>),
-		slog.String("db.namespace", "counter"),
-		slog.String("db.operation.name", "SELECT"),
-		slog.String("db.stored_procedure.name", "GetCounter"),
-		slog.String("db.response.returned_rows", "1"),
+	// TODO wide events
+	s.logSQLQuery(ctx,
+		queries.GetCounter,
+		"SELECT",
+		"GetCounter",
+		"1",
 	)
 
 	if err != nil {
@@ -49,13 +48,11 @@ func (s *CountService) Get(ctx context.Context) (int64, error) {
 func (s *CountService) Increment(ctx context.Context) (int64, error) {
 	value, err := s.store.IncrementAndGetCounter(ctx)
 
-	httplog.SetAttrs(ctx,
-		slog.String("db.query.text", queries.IncrementAndGetCounter),
-		// slog.String("db.query.parameter.<key>", <key>),
-		slog.String("db.namespace", "counter"),
-		slog.String("db.operation.name", "INSERT"),
-		slog.String("db.stored_procedure.name", "IncrementAndGetCounter"),
-		slog.String("db.response.returned_rows", "1"),
+	s.logSQLQuery(ctx,
+		queries.IncrementAndGetCounter,
+		"INSERT",
+		"IncrementAndGetCounter",
+		"1",
 	)
 
 	if err != nil {
@@ -63,4 +60,32 @@ func (s *CountService) Increment(ctx context.Context) (int64, error) {
 	}
 
 	return value, nil
+}
+
+// logSQLQuery is helper
+// TODO replace WE.
+func (*CountService) logSQLQuery(
+	ctx context.Context,
+	queryText string,
+	opName string,
+	procName string,
+	returnedRows string,
+) {
+	slogchi.AddContextAttributes(ctx, slog.Any(
+		"db", map[string]any{
+			"query": map[string]string{
+				"text": queryText,
+			},
+			"namespace": "counter",
+			"operation": map[string]string{
+				"name": opName,
+			},
+			"stored_procedure": map[string]string{
+				"name": procName,
+			},
+			"response": map[string]string{
+				"returned_rows": returnedRows,
+			},
+		}),
+	)
 }

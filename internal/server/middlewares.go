@@ -2,44 +2,17 @@ package server
 
 import (
 	"log/slog"
-	"net/http"
-
-	"idp/internal/config"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httplog/v3"
+	slogchi "github.com/samber/slog-chi"
 )
 
 //nolint:mnd // Package-wide configuration options, not exposed to final user
-func registerMiddleware(r chi.Router, cfg *config.Config, logger *slog.Logger) {
-	loggingOptions := httplog.Options{
-		Level:         slog.LevelInfo,
-		Schema:        cfg.LoggingSchema,
-		RecoverPanics: true,
-		Skip: func(_ *http.Request, status int) bool {
-			return status == 404 || status == 405
-		},
-		LogRequestHeaders: []string{
-			"Accept-Encoding",
-			"Content-Type",
-			"Content-Length",
-			"Connection",
-			"Host",
-			"HX-Request",
-			"Origin",
-			"User-agent",
-			"X-Forwarded-For",
-			"X-Forwarded-Proto",
-			"X-Real-Ip",
-		},
-		LogExtraAttrs: func(req *http.Request, _ string, _ int) []slog.Attr {
-			reqID := middleware.GetReqID(req.Context())
-			return []slog.Attr{
-				slog.String("request.id", reqID),
-			}
-		},
+func registerMiddleware(r chi.Router, logger *slog.Logger) {
+	loggingOptions := slogchi.Config{
+		WithSpanID:  true,
+		WithTraceID: true,
 	}
 
 	corsOptions := cors.Options{
@@ -64,5 +37,5 @@ func registerMiddleware(r chi.Router, cfg *config.Config, logger *slog.Logger) {
 	}
 
 	r.Use(cors.Handler(corsOptions))
-	r.Use(httplog.RequestLogger(logger, &loggingOptions))
+	r.Use(slogchi.NewWithConfig(logger, loggingOptions))
 }

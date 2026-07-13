@@ -177,8 +177,8 @@ func TestIncreaseCounter(t *testing.T) {
 
 /*
 
-Future test: request telemetry
-==============================
+TODO Future test: request telemetry
+===================================
 
 The handler currently enriches the request context using httplog.SetAttrs().
 This is observable behavior because downstream middleware consumes these
@@ -203,8 +203,8 @@ following behavior should be verified:
 
 /*
 
-Future test: template rendering failures
-========================================
+TODO Future test: template rendering failures
+=============================================
 
 The handler explicitly handles errors returned by templ.Render(). Generated
 templ components, however, cannot realistically be forced to fail without

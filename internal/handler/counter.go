@@ -8,7 +8,7 @@ import (
 	"idp/internal/web/templates/components"
 	"idp/internal/web/templates/pages"
 
-	"github.com/go-chi/httplog/v3"
+	slogchi "github.com/samber/slog-chi"
 )
 
 type CounterService interface {
@@ -36,8 +36,7 @@ func (h *CounterHandler) DisplayCounter(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	httplog.SetAttrs(ctx,
+	slogchi.AddCustomAttributes(r,
 		slog.Int64("counter.value", value),
 	)
 
@@ -56,7 +55,7 @@ func (h *CounterHandler) IncreaseCounter(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	httplog.SetAttrs(ctx,
+	slogchi.AddCustomAttributes(r,
 		slog.Int64("counter.value", value),
 	)
 

@@ -55,10 +55,15 @@ func TestNew_JSONLogger(t *testing.T) {
 				logger.Info("startup")
 			},
 			assert: func(t *testing.T, record map[string]any) {
-				require.Equal(t, "idp_test", record["service.name"])
-				require.Equal(t, "1.2.3", record["service.version"])
-				require.Equal(t, "abcdef", record["service.hash_commit"])
-				require.Equal(t, "test", record["service.env"])
+				require.Equal(t,
+					map[string]any{
+						"name":        "idp_test",
+						"version":     "1.2.3",
+						"hash_commit": "abcdef",
+						"env":         "test",
+					},
+					record["service"],
+				)
 			},
 		},
 	}

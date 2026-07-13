@@ -34,7 +34,7 @@ func NewRouter(
 ) http.Handler {
 	router := chi.NewRouter()
 
-	registerMiddleware(router, cfg, logger)
+	registerMiddleware(router, logger)
 	registerRoutes(router, cfg, systemHandler, counterHandler)
 	web.RegisterStaticRoutes(router)
 

@@ -150,8 +150,8 @@ func TestIncrement(t *testing.T) {
 
 /*
 
-Future test: request telemetry
-==============================
+TODO Future test: request telemetry
+===================================
 
 The service currently enriches the request context with database telemetry via
 httplog.SetAttrs(). This is observable behavior because downstream middleware

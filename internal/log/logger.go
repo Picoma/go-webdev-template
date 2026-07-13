@@ -8,8 +8,6 @@ import (
 	"idp/internal/config"
 
 	"github.com/lmittmann/tint"
-	slogformatter "github.com/samber/slog-formatter"
-	slogmulti "github.com/samber/slog-multi"
 )
 
 func New(w io.Writer, cfg *config.Config) *slog.Logger {
@@ -26,32 +24,22 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 			TimeFormat: time.TimeOnly,
 		})
 	} else {
-		// TODO create lib unifying context values, slog.Logger (json, flattened), and OTEL semantics
-		// inspiré de codeberg.org/shimeoki/line, davantage intégré avec slog + sémantique OTEL
+		// TODO create lib implementing wide events through OTEL spans + span events
 		//
 		// For now this will have to do, but it is really incomfortable for its intended purpose
-		slogHandler = slogmulti.Pipe(
-			slogformatter.FlattenFormatterMiddlewareOptions{
-				Separator:  ".",
-				Prefix:     "",
-				IgnorePath: false,
-			}.NewFlattenFormatterMiddlewareOptions(),
-		).Handler(
-			slog.NewJSONHandler(w, &slog.HandlerOptions{
-				AddSource:   cfg.Verbose,
-				Level:       level,
-				ReplaceAttr: cfg.LoggingSchema.ReplaceAttr,
-			}),
-		)
+		slogHandler = slog.NewJSONHandler(w, &slog.HandlerOptions{
+			AddSource: cfg.Verbose,
+			Level:     level,
+		})
 	}
 
-	logger := slog.New(slogHandler).With(
-		slog.String("service.name", cfg.Service.Name),
-		slog.String("service.version", cfg.Service.Version),
-		slog.String("service.hash_commit", cfg.Service.Commit),
-		slog.String("service.env", cfg.Service.Env),
-	)
-
+	logger := slog.New(slogHandler).With(slog.Any(
+		"service", map[string]string{
+			"name":        cfg.Service.Name,
+			"version":     cfg.Service.Version,
+			"hash_commit": cfg.Service.Commit,
+			"env":         cfg.Service.Env,
+		}))
 	slog.SetDefault(logger)
 
 	return logger
