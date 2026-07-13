@@ -5,7 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"idp/internal/web/templates"
+	"idp/internal/web/templates/components"
+	"idp/internal/web/templates/pages"
 
 	"github.com/go-chi/httplog/v3"
 )
@@ -15,6 +16,7 @@ type CounterService interface {
 	Increment(ctx context.Context) (int64, error)
 }
 
+// CounterHandler implements [server.CounterHandler].
 type CounterHandler struct {
 	CountService CounterService
 }
@@ -39,7 +41,7 @@ func (h *CounterHandler) DisplayCounter(w http.ResponseWriter, r *http.Request) 
 		slog.Int64("counter.value", value),
 	)
 
-	if err := templates.CounterPage(value).Render(ctx, w); err != nil {
+	if err := pages.CounterPage(value).Render(ctx, w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -58,7 +60,7 @@ func (h *CounterHandler) IncreaseCounter(w http.ResponseWriter, r *http.Request)
 		slog.Int64("counter.value", value),
 	)
 
-	if err := templates.CounterValue(value).Render(ctx, w); err != nil {
+	if err := components.CounterValue(value).Render(ctx, w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

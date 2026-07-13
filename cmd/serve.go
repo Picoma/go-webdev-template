@@ -11,9 +11,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func newRunCmd(cfg *config.Config) *cli.Command {
+func newServeCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
-		Name:  "run",
+		Name:  "serve",
 		Usage: "Start the application server",
 		Flags: []cli.Flag{
 			&cli.StringFlag{

@@ -1,107 +1,55 @@
+//nolint:paralleltest // If swapping databases is required/desired (like for Postgres), infra reuse might be needed, thus sequential tests
 package db_test
 
+// This file documents the operational contract exposed by CheckDatabase.
+//
+// A health check is expected to:
+//   - report a reachable database as healthy;
+//   - report a broken connection as unavailable.
+//
+// The tests avoid forcing connection-pool statistics because those values are
+// runtime characteristics rather than stable behavioral guarantees. Testing
+// them would make the suite dependent on database/sql scheduling behavior.
+
 import (
-	"context"
-	"log/slog"
 	"testing"
 
-	"idp/internal/config"
 	"idp/internal/db"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestDB_CheckDatabase(t *testing.T) {
-	t.Parallel()
+// TestCheckDatabase verifies the two externally meaningful states of the
+// database health endpoint: healthy and unavailable.
+func TestCheckDatabase(t *testing.T) {
+	ctx := t.Context()
 
-	tests := []struct {
-		name       string
-		setup      func(t *testing.T) *db.DB
-		wantStatus string
-		wantMsg    string
-	}{
-		{
-			name: "healthy database",
-			setup: func(t *testing.T) *db.DB {
-				t.Helper()
+	t.Run("reports a healthy database", func(t *testing.T) {
+		db, err := db.Open(ctx, discardLogger(), testConfig(t))
+		require.NoError(t, err)
 
-				database, err := db.Open(
-					context.Background(),
-					slog.Default(),
-					&config.Config{
-						DB: config.DB{
-							Driver:                         "sqlite3",
-							ConnString:                     ":memory:",
-							HealthyOpenConnectionThreshold: 40,
-							HealthyWaitCountThreshold:      1000,
-						},
-					},
-				)
-				if err != nil {
-					t.Fatalf("Open() error = %v", err)
-				}
-
-				t.Cleanup(func() {
-					_ = database.Close()
-				})
-
-				return database
-			},
-			wantStatus: "up",
-			wantMsg:    "healthy",
-		},
-		{
-			name: "closed database",
-			setup: func(t *testing.T) *db.DB {
-				t.Helper()
-
-				database, err := db.Open(
-					context.Background(),
-					slog.Default(),
-					&config.Config{
-						DB: config.DB{
-							Driver:     "sqlite3",
-							ConnString: ":memory:",
-						},
-					},
-				)
-				if err != nil {
-					t.Fatalf("Open() error = %v", err)
-				}
-
-				if err := database.Close(); err != nil {
-					t.Fatalf("Close() error = %v", err)
-				}
-
-				return database
-			},
-			wantStatus: "down",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			database := tt.setup(t)
-
-			status := database.CheckDatabase(
-				context.Background(),
-			)
-
-			if status.Status != tt.wantStatus {
-				t.Fatalf(
-					"Status: got %q want %q",
-					status.Status,
-					tt.wantStatus,
-				)
-			}
-
-			if status.Message != tt.wantMsg {
-				t.Fatalf(
-					"Message: got %q want %q",
-					status.Message,
-					tt.wantMsg,
-				)
-			}
+		t.Cleanup(func() {
+			require.NoError(t, db.Close())
 		})
-	}
+
+		status := db.CheckDatabase(ctx)
+
+		require.Equal(t, "up", status.Status)
+		require.Equal(t, "healthy", status.Message)
+		require.Empty(t, status.Error)
+	})
+
+	// This protects the failure path used by monitoring systems. A database
+	// which cannot answer a ping must never be reported as healthy.
+	t.Run("reports an unavailable database", func(t *testing.T) {
+		db, err := db.Open(ctx, discardLogger(), testConfig(t))
+		require.NoError(t, err)
+
+		require.NoError(t, db.Connection.Close())
+
+		status := db.CheckDatabase(ctx)
+
+		require.Equal(t, "down", status.Status)
+		require.NotEmpty(t, status.Error)
+	})
 }

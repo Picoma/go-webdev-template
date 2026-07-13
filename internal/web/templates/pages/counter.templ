@@ -1,16 +1,12 @@
-package templates
+package pages
 
-templ CounterValue(value int64) {
-	<span
-		id="counter-value"
-		class="text-6xl font-bold tabular-nums"
-	>
-		{ value }
-	</span>
-}
+import (
+	"idp/internal/web/templates/components"
+	"idp/internal/web/templates/layouts"
+)
 
 templ CounterPage(value int64) {
-	@Base() {
+	@layouts.Base() {
 		<div class="hero min-h-screen">
 			<div class="hero-content w-full max-w-md">
 				<div class="card bg-base-100 shadow-xl w-full">
@@ -24,7 +20,7 @@ templ CounterPage(value int64) {
 									Current value
 								</div>
 								<div class="stat-value">
-									@CounterValue(value)
+									@components.CounterValue(value)
 								</div>
 							</div>
 						</div>

@@ -1,13 +1,18 @@
 [tools]
+# mise
 usage = "latest"
+# Go code
 go = "latest"
 "go:github.com/a-h/templ/cmd/templ" = "latest"
 "go:github.com/pressly/goose/v3/cmd/goose" = "latest"
 sqlc = "latest"
+# Go dev tools
 goreleaser = "latest"
-node = "latest"
 upx = "latest"
 "go:github.com/aarzilli/whydeadcode" = "latest"
+"go:go.uber.org/nilaway/cmd/nilaway" = "latest"
+# frontend gen
+node = "latest"
 
 [env]
 _.path = 'dist'
@@ -27,13 +32,13 @@ run = '''
 # Running application
 case "${usage_display:-}" in
   human)
-    go run . run --debug -f | sed 's/\[2m/\n\[2m/g'
+    go run . serve --debug -f | sed 's/\[2m/\n\[2m/g'
     ;;
   nested)
-    go run . run --debug | jq 'reduce to_entries[] as $kv ({}; setpath($kv.key|split("."); $kv.value))'
+    go run . serve --debug | jq 'reduce to_entries[] as $kv ({}; setpath($kv.key|split("."); $kv.value))'
     ;;
     *)
-    go run . run --debug | jq
+    go run . serve --debug | jq
     ;;
 esac
 '''
@@ -50,8 +55,12 @@ go test ./...
 # TODO Bench
 echo
 echo === Lint ===
-echo "GolangCI : $(golangci-lint run --fix --issues-exit-code 2>/dev/null)"
-echo "Templ\t : $(templ fmt . --fail 2>&1)"
+echo "Nilway:\n"
+nilaway '-include-pkgs=idp/cmd,idp/internal/app,idp/internal/db,idp/internal/config,idp/internal/handler,idp/internal/log,idp/internal/server,idp/internal/service,idp/internal/web' ./...
+echo "GolangCI :\n"
+golangci-lint run --fix --issues-exit-code 1 2>/dev/null
+echo "Templ :\n"
+templ fmt . --fail 2>&1
 '''
 
 [tasks."app:clean"]
@@ -69,3 +78,6 @@ mkdir -p tmp
 touch tmp/test.db
 goose up
 '''
+
+[tasks."pre-commit:nilaway"]
+run = ""

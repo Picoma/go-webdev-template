@@ -16,7 +16,7 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 		Metadata:  map[string]any{},
 
 		Commands: []*cli.Command{
-			newRunCmd(cfg),
+			newServeCmd(cfg),
 			newMigrateCmd(cfg),
 		},
 		Flags: []cli.Flag{

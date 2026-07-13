@@ -67,6 +67,8 @@ make clean
 
 features :
 - get started quick
+  - full tests, for safe TDD feature dev
+  - deployable as is, with flow from request to db
 - focus on platform not tech:
   - OTEL-compatible wide events (aka canonical log event)
   - low-level debugging mode with flame graphs, tracing OOB (TODO écrire mode op)

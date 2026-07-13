@@ -1,23 +1,36 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
+	"net/http"
 
 	"idp/internal/db"
-
-	"net/http"
 )
 
-type HealthChecker interface {
-	CheckDatabase(context.Context) db.DatabaseStatus
+// SystemHandler implements [server.SystemHandler].
+//
+// It uses the database directly, thus merging the service and handler layers.
+// This is fine as ther will never be "business" logic here : we display the raw
+// system data.
+type SystemHandler struct {
+	db *db.DB
 }
 
-func HealthHandler(database HealthChecker) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		status := database.CheckDatabase(r.Context())
-
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(status)
+func NewSystemHandler(db *db.DB) *SystemHandler {
+	return &SystemHandler{
+		db: db,
 	}
 }
+
+func (sh *SystemHandler) DisplayDBHealth(w http.ResponseWriter, r *http.Request) {
+	status := sh.db.CheckDatabase(r.Context())
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(status)
+}
+
+// // PromMetrics displays a prometheus metrics endpoint
+// func (sh *SystemHandler) PromMetrics(w http.ResponseWriter, r *http.Request) {}
+
+// // DisplayVersion displays the current version, queriable from HTTP.
+// func (sh *SystemHandler) DisplayVersion(w http.ResponseWriter, r *http.Request) {}

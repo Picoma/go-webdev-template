@@ -29,7 +29,7 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 		// TODO create lib unifying context values, slog.Logger (json, flattened), and OTEL semantics
 		// inspiré de codeberg.org/shimeoki/line, davantage intégré avec slog + sémantique OTEL
 		//
-		// For now this shit will have to do, but it is really incomfortable
+		// For now this will have to do, but it is really incomfortable for its intended purpose
 		slogHandler = slogmulti.Pipe(
 			slogformatter.FlattenFormatterMiddlewareOptions{
 				Separator:  ".",

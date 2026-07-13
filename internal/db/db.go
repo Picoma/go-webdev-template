@@ -16,6 +16,7 @@ import (
 
 //go:generate sqlc generate -f ../../sqlc.yaml
 
+// DB being the entrypoint for services, he implements [server.HealthChecker].
 type DB struct {
 	Logger *slog.Logger
 	cfg    *config.Config

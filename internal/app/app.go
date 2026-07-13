@@ -34,16 +34,17 @@ func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*App, er
 
 	counterSvc := service.NewCountService(database.Queries)
 	counterHandler := handler.NewCounterHandler(counterSvc)
+	systemHandler := handler.NewSystemHandler(database)
 
 	router := server.NewRouter(
 		logger,
 		cfg,
-		database,
+		systemHandler,
 		counterHandler,
 	)
 
 	srv := server.New(
-		cfg.Server,
+		&cfg.Server,
 		router,
 	)
 

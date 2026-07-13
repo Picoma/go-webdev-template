@@ -1,95 +1,103 @@
 package handler_test
 
+// This file documents the HTTP contract of SystemHandler.
+//
+// Unlike most handlers, SystemHandler intentionally has no service layer:
+// system endpoints expose operational information rather than business data.
+//
+// These tests therefore use the real SQLite database implementation in memory.
+// SQLite is the supported production database engine, so this provides a
+// meaningful integration boundary rather than a mocked database.
+
 import (
-	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"idp/internal/config"
 	"idp/internal/db"
 	"idp/internal/handler"
+
+	"github.com/stretchr/testify/require"
 )
 
-type fakeHealthChecker struct {
-	status db.DatabaseStatus
+func newMemoryDB(t *testing.T) *db.DB {
+	t.Helper()
+
+	cfg := config.Defaults(config.Service{
+		Name: "tdp_test",
+	})
+	cfg.DB.ConnString = ":memory:"
+
+	database, err := db.Open(
+		t.Context(),
+		slog.Default(),
+		cfg,
+	)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		require.NoError(t, database.Close())
+	})
+
+	return database
 }
 
-func (f fakeHealthChecker) CheckDatabase(context.Context) db.DatabaseStatus {
-	return f.status
-}
-
-func TestHealthHandler(t *testing.T) {
+func TestSystemHandler(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name       string
-		status     db.DatabaseStatus
-		wantStatus int
-	}{
-		{
-			name: "healthy database",
-			status: db.DatabaseStatus{
-				Status:  "up",
-				Message: "healthy",
-			},
-			wantStatus: http.StatusOK,
-		},
-		{
-			name: "unhealthy database",
-			status: db.DatabaseStatus{
-				Status: "down",
-				Error:  "connection refused",
-			},
-			wantStatus: http.StatusOK,
-		},
-	}
+	t.Run("returns healthy database status", func(t *testing.T) {
+		t.Parallel()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		database := newMemoryDB(t)
+		handler := handler.NewSystemHandler(database)
 
-			handler := handler.HealthHandler(fakeHealthChecker{
-				status: tt.status,
-			})
+		req := httptest.NewRequest(http.MethodGet, "/health", nil)
+		rec := httptest.NewRecorder()
 
-			req := httptest.NewRequest(http.MethodGet, "/health", nil)
-			rec := httptest.NewRecorder()
+		handler.DisplayDBHealth(rec, req)
 
-			handler(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Equal(
+			t,
+			"application/json",
+			rec.Header().Get("Content-Type"),
+		)
 
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status: got %d want %d", rec.Code, tt.wantStatus)
-			}
+		var status db.DatabaseStatus
+		require.NoError(
+			t,
+			json.NewDecoder(rec.Body).Decode(&status),
+		)
 
-			if got := rec.Header().Get("Content-Type"); got != "application/json" {
-				t.Fatalf(
-					"content type: got %q want %q",
-					got,
-					"application/json",
-				)
-			}
+		require.Equal(t, "up", status.Status)
+		require.Equal(t, "healthy", status.Message)
+	})
 
-			var got db.DatabaseStatus
-			if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
-				t.Fatalf("decode response: %v", err)
-			}
+	t.Run("reports closed database as unavailable", func(t *testing.T) {
+		t.Parallel()
 
-			if got.Status != tt.status.Status {
-				t.Fatalf(
-					"status field: got %q want %q",
-					got.Status,
-					tt.status.Status,
-				)
-			}
+		database := newMemoryDB(t)
+		require.NoError(t, database.Close())
 
-			if got.Message != tt.status.Message {
-				t.Fatalf(
-					"message field: got %q want %q",
-					got.Message,
-					tt.status.Message,
-				)
-			}
-		})
-	}
+		handler := handler.NewSystemHandler(database)
+
+		req := httptest.NewRequest(http.MethodGet, "/health", nil)
+		rec := httptest.NewRecorder()
+
+		handler.DisplayDBHealth(rec, req)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+
+		var status db.DatabaseStatus
+		require.NoError(
+			t,
+			json.NewDecoder(rec.Body).Decode(&status),
+		)
+
+		require.Equal(t, "down", status.Status)
+		require.NotEmpty(t, status.Error)
+	})
 }

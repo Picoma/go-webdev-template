@@ -57,14 +57,12 @@ func registerMiddleware(r chi.Router, cfg *config.Config, logger *slog.Logger) {
 		},
 		AllowedHeaders: []string{
 			"Accept",
-			"Authorization",
 			"Content-Type",
 		},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           300,
 	}
 
-	r.Use(middleware.RequestID)
-	r.Use(httplog.RequestLogger(logger, &loggingOptions))
 	r.Use(cors.Handler(corsOptions))
+	r.Use(httplog.RequestLogger(logger, &loggingOptions))
 }

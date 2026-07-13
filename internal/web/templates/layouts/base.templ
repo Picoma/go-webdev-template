@@ -1,4 +1,4 @@
-package templates
+package layouts
 
 templ Base() {
 	<!DOCTYPE html>
@@ -16,4 +16,11 @@ templ Base() {
 			</main>
 		</body>
 	</html>
+}
+
+// Used in tests
+templ TestBaseWithChild() {
+	@Base() {
+		<div id="test-child">hello</div>
+	}
 }

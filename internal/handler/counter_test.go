@@ -1,142 +1,217 @@
 package handler_test
 
+// This file documents the HTTP contract of CounterHandler.
+//
+// CounterHandler is a thin transport adapter responsible for:
+//
+//   - translating HTTP requests into service calls;
+//   - selecting the appropriate template;
+//   - translating service failures into HTTP 500 responses.
+//
+// The tests intentionally verify observable HTTP behavior rather than HTML
+// implementation details. They assert the presence of stable, user-visible
+// elements instead of the complete rendered document, allowing the page layout
+// and styling to evolve without breaking the suite.
+
 import (
 	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"idp/internal/handler"
+
+	"github.com/stretchr/testify/require"
 )
 
+// fakeCounterService is a minimal handwritten test double.
+//
+// The handler depends on a very small interface, making a dedicated fake easier
+// to understand than a generic mocking framework. It records which operation
+// was invoked while allowing each test to control the returned value or error.
+//
 // fakeCounterService implements [CounterService].
 type fakeCounterService struct {
-	getFunc       func(context.Context) (int64, error)
-	incrementFunc func(context.Context) (int64, error)
+	getValue int64
+	getErr   error
+
+	incrementValue int64
+	incrementErr   error
+
+	getCalled       bool
+	incrementCalled bool
 }
 
-func (f *fakeCounterService) Get(ctx context.Context) (int64, error) {
-	return f.getFunc(ctx)
+func (f *fakeCounterService) Get(context.Context) (int64, error) {
+	f.getCalled = true
+	return f.getValue, f.getErr
 }
 
-func (f *fakeCounterService) Increment(ctx context.Context) (int64, error) {
-	return f.incrementFunc(ctx)
+func (f *fakeCounterService) Increment(context.Context) (int64, error) {
+	f.incrementCalled = true
+	return f.incrementValue, f.incrementErr
 }
 
-func TestNewCounterHandler(t *testing.T) {
+// TestDisplayCounter verifies the HTTP contract of the page endpoint.
+//
+// The endpoint is expected to:
+//
+//   - retrieve the current value from the service;
+//   - render the complete page;
+//   - expose the counter value within the rendered document;
+//   - translate service failures into HTTP 500 responses.
+func TestDisplayCounter(t *testing.T) {
 	t.Parallel()
 
-	service := &fakeCounterService{}
+	t.Run("renders the counter page", func(t *testing.T) {
+		t.Parallel()
 
-	handler := handler.NewCounterHandler(service)
+		service := &fakeCounterService{
+			getValue: 42,
+		}
 
-	if handler.CountService != service {
-		t.Fatal("expected service to be assigned")
-	}
+		handler := handler.NewCounterHandler(service)
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+
+		handler.DisplayCounter(rec, req)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+
+		body := rec.Body.String()
+
+		require.Contains(t, body, "Counter")
+		require.Contains(t, body, "Current value")
+		require.Contains(t, body, `id="counter-value"`)
+		require.Contains(t, body, ">42<")
+
+		require.True(t, service.getCalled)
+		require.False(t, service.incrementCalled)
+	})
+
+	t.Run("returns internal server error when the service fails", func(t *testing.T) {
+		t.Parallel()
+
+		expected := errors.New("database unavailable")
+
+		service := &fakeCounterService{
+			getErr: expected,
+		}
+
+		handler := handler.NewCounterHandler(service)
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		rec := httptest.NewRecorder()
+
+		handler.DisplayCounter(rec, req)
+
+		require.Equal(t, http.StatusInternalServerError, rec.Code)
+		require.Contains(t, rec.Body.String(), "database unavailable")
+
+		require.True(t, service.getCalled)
+		require.False(t, service.incrementCalled)
+	})
 }
 
-func TestCounterHandler_GetCounter(t *testing.T) {
+// TestIncreaseCounter verifies the HTMX endpoint contract.
+//
+// Unlike DisplayCounter, this endpoint intentionally renders only the HTML
+// fragment required to update the current counter value.
+func TestIncreaseCounter(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name       string
-		value      int64
-		err        error
-		wantStatus int
-		wantBody   string
-	}{
-		{
-			name:       "success",
-			value:      42,
-			wantStatus: http.StatusOK,
-			wantBody:   "42",
-		},
-		{
-			name:       "service error",
-			err:        errors.New("database unavailable"),
-			wantStatus: http.StatusInternalServerError,
-			wantBody:   "database unavailable",
-		},
-	}
+	t.Run("renders the counter fragment", func(t *testing.T) {
+		t.Parallel()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		service := &fakeCounterService{
+			incrementValue: 43,
+		}
 
-			service := &fakeCounterService{
-				getFunc: func(context.Context) (int64, error) {
-					return tt.value, tt.err
-				},
-			}
+		handler := handler.NewCounterHandler(service)
 
-			handler := handler.NewCounterHandler(service)
+		req := httptest.NewRequest(http.MethodPost, "/counter", nil)
+		rec := httptest.NewRecorder()
 
-			req := httptest.NewRequest(http.MethodGet, "/counter", nil)
-			rec := httptest.NewRecorder()
+		handler.IncreaseCounter(rec, req)
 
-			handler.DisplayCounter(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
 
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status: got %d want %d", rec.Code, tt.wantStatus)
-			}
+		body := rec.Body.String()
 
-			if !strings.Contains(rec.Body.String(), tt.wantBody) {
-				t.Fatalf("body: got %q want containing %q", rec.Body.String(), tt.wantBody)
-			}
-		})
-	}
+		require.Contains(t, body, `id="counter-value"`)
+		require.Contains(t, body, ">43<")
+
+		// The HTMX endpoint must only return the replacement fragment.
+		require.NotContains(t, body, "Current value")
+		require.NotContains(t, body, "<html")
+
+		require.False(t, service.getCalled)
+		require.True(t, service.incrementCalled)
+	})
+
+	t.Run("returns internal server error when the service fails", func(t *testing.T) {
+		t.Parallel()
+
+		expected := errors.New("write failed")
+
+		service := &fakeCounterService{
+			incrementErr: expected,
+		}
+
+		handler := handler.NewCounterHandler(service)
+
+		req := httptest.NewRequest(http.MethodPost, "/counter", nil)
+		rec := httptest.NewRecorder()
+
+		handler.IncreaseCounter(rec, req)
+
+		require.Equal(t, http.StatusInternalServerError, rec.Code)
+		require.Contains(t, rec.Body.String(), "write failed")
+
+		require.False(t, service.getCalled)
+		require.True(t, service.incrementCalled)
+	})
 }
 
-func TestCounterHandler_IncreaseCounter(t *testing.T) {
-	t.Parallel()
+/*
 
-	tests := []struct {
-		name       string
-		value      int64
-		err        error
-		wantStatus int
-		wantBody   string
-	}{
-		{
-			name:       "success",
-			value:      100,
-			wantStatus: http.StatusOK,
-			wantBody:   "100",
-		},
-		{
-			name:       "service error",
-			err:        errors.New("increment failed"),
-			wantStatus: http.StatusInternalServerError,
-			wantBody:   "increment failed",
-		},
-	}
+Future test: request telemetry
+==============================
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+The handler currently enriches the request context using httplog.SetAttrs().
+This is observable behavior because downstream middleware consumes these
+attributes when producing structured logs.
 
-			service := &fakeCounterService{
-				incrementFunc: func(context.Context) (int64, error) {
-					return tt.value, tt.err
-				},
-			}
+httplog currently exposes no public API allowing tests to inspect the
+attributes attached to a request context, making this behavior impossible to
+verify without relying on implementation details.
 
-			handler := handler.NewCounterHandler(service)
+Once telemetry is extracted into the application's event abstraction, the
+following behavior should be verified:
 
-			req := httptest.NewRequest(http.MethodPost, "/counter/increase", nil)
-			rec := httptest.NewRecorder()
+- DisplayCounter attaches:
+      counter.value
 
-			handler.IncreaseCounter(rec, req)
+- IncreaseCounter attaches:
+      counter.value
 
-			if rec.Code != tt.wantStatus {
-				t.Fatalf("status: got %d want %d", rec.Code, tt.wantStatus)
-			}
+- Service failures do *not* attach counter.value because no value was produced.
 
-			if !strings.Contains(rec.Body.String(), tt.wantBody) {
-				t.Fatalf("body: got %q want containing %q", rec.Body.String(), tt.wantBody)
-			}
-		})
-	}
-}
+*/
+
+/*
+
+Future test: template rendering failures
+========================================
+
+The handler explicitly handles errors returned by templ.Render(). Generated
+templ components, however, cannot realistically be forced to fail without
+modifying generated code or introducing an artificial seam.
+
+If rendering is later abstracted behind an interface (or templates become
+runtime-provided), add tests ensuring that rendering failures are translated
+into HTTP 500 responses.
+
+*/
