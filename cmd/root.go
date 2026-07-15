@@ -21,14 +21,6 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:        "format-logs",
-				Usage:       "log events in human readable format",
-				Aliases:     []string{"f"},
-				Sources:     cli.EnvVars("IDP_FORMAT_LOGS"),
-				Destination: &cfg.TintedLogs,
-				Value:       false,
-			},
-			&cli.BoolFlag{
 				Name:        "verbose",
 				Aliases:     []string{"v"},
 				Usage:       "verbose output",
