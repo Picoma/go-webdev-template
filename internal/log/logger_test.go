@@ -29,10 +29,10 @@ import (
 
 func testConfig() *config.Config {
 	service := config.Service{
-		Name:       "idp_test",
-		Version:    "1.2.3",
-		HashCommit: "abcdef",
-		Env:        "test",
+		Name:    "idp_test",
+		Version: "1.2.3",
+		Commit:  "abcdef",
+		Env:     "test",
 	}
 
 	cfg := config.Defaults(service)

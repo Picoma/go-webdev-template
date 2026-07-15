@@ -24,7 +24,7 @@ func main() {
 		Description: description,
 		Version:     version,
 		Env:         env,
-		HashCommit:  commit,
+		Commit:      commit,
 	}
 	cfg := config.Defaults(service)
 	cmd := cmd.NewRootCmd(cfg)

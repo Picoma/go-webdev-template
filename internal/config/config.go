@@ -9,7 +9,7 @@ type Service struct {
 	Description string
 	Version     string
 	Env         string
-	HashCommit  string
+	Commit      string
 }
 
 type DB struct {
@@ -33,8 +33,9 @@ type Config struct {
 	DB      DB
 	Server  Server
 
-	WithDebug bool
-	Verbose   bool
+	WithDebug  bool
+	Verbose    bool
+	TintedLogs bool
 }
 
 func Defaults(service Service) *Config {
@@ -55,7 +56,8 @@ func Defaults(service Service) *Config {
 			IdleTimeout:     time.Minute,
 			ShutdownTimeout: 30 * time.Second,
 		},
-		WithDebug: false, // Set in CLI
-		Verbose:   false, // Set in CLI
+		WithDebug:  false, // Set in CLI
+		Verbose:    false, // Set in CLI
+		TintedLogs: false,
 	}
 }

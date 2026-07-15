@@ -1,6 +1,5 @@
 [tools]
-"usage"            = "latest" # Mise completion spec for tasks
-"aqua:pamburus/hl" = "latest" # Structured log viewer
+"usage" = "latest" # Mise completion spec for tasks
 
 "go"                                       = "1.26.4" # i dunno what it is
 "go:github.com/pressly/goose/v3/cmd/goose" = "latest" # (embedded) database migrations
@@ -38,13 +37,13 @@ run = '''
 # Running application
 case "${usage_display:-}" in
   human)
-    go run . serve --verbose | hl --follow -x 'always' --flatten 'never'
+    go run . serve --debug -f | sed 's/\[2m/\n\[2m/g'
     ;;
   nested)
-    go run . serve --verbose | jq 'reduce to_entries[] as $kv ({}; setpath($kv.key|split("."); $kv.value))'
+    go run . serve --debug | jq 'reduce to_entries[] as $kv ({}; setpath($kv.key|split("."); $kv.value))'
     ;;
-  *)
-    go run . serve --verbose | jq
+    *)
+    go run . serve --debug | jq
     ;;
 esac
 '''
@@ -61,11 +60,11 @@ go test ./...
 # TODO Bench
 echo
 echo === Lint ===
-echo "Nilway:"
+echo "Nilway:\n"
 nilaway '-include-pkgs=idp/cmd,idp/internal/app,idp/internal/db,idp/internal/config,idp/internal/handler,idp/internal/log,idp/internal/server,idp/internal/service,idp/internal/web' ./...
-echo -e "\nGolangCI :"
+echo "GolangCI :\n"
 golangci-lint run --fix --disable godox --issues-exit-code 1 2>/dev/null
-echo -e "\nTempl :"
+echo "Templ :\n"
 templ fmt . --fail 2>&1
 '''
 
