@@ -15,10 +15,6 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 		Copyright: "",
 		Metadata:  map[string]any{},
 
-		Commands: []*cli.Command{
-			newServeCmd(cfg),
-			newMigrateCmd(cfg),
-		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "verbose",
@@ -35,6 +31,10 @@ func NewRootCmd(cfg *config.Config) *cli.Command {
 				Destination: &cfg.DB.ConnString,
 				Value:       "idp.sqlite",
 			},
+		},
+		Commands: []*cli.Command{
+			newServeCmd(cfg),
+			newMigrateCmd(cfg),
 		},
 
 		EnableShellCompletion: false,
