@@ -45,7 +45,7 @@ func newTestRouter(t *testing.T, withDebug bool) (
 
 	router := server.NewRouter(
 		slog.New(slog.DiscardHandler),
-		cfg,
+		cfg.WithDebug,
 		system,
 		counter,
 	)

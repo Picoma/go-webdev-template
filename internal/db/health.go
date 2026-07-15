@@ -44,11 +44,11 @@ func (db *DB) CheckDatabase(ctx context.Context) DatabaseStatus {
 	}
 
 	// thresholds
-	if stats.OpenConnections > db.cfg.DB.HealthyOpenConnectionThreshold {
+	if stats.OpenConnections > db.cfg.HealthyOpenConnectionThreshold {
 		out.Message = "high load"
 	}
 
-	if stats.WaitCount > int64(db.cfg.DB.HealthyWaitCountThreshold) {
+	if stats.WaitCount > int64(db.cfg.HealthyWaitCountThreshold) {
 		out.Message = "contention detected"
 	}
 

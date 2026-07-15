@@ -25,7 +25,7 @@ func TestCheckDatabase(t *testing.T) {
 	ctx := t.Context()
 
 	t.Run("reports a healthy database", func(t *testing.T) {
-		db, err := db.Open(ctx, discardLogger(), testConfig(t))
+		db, err := db.Open(ctx, discardLogger(), &testConfig(t).DB)
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
@@ -42,7 +42,7 @@ func TestCheckDatabase(t *testing.T) {
 	// This protects the failure path used by monitoring systems. A database
 	// which cannot answer a ping must never be reported as healthy.
 	t.Run("reports an unavailable database", func(t *testing.T) {
-		db, err := db.Open(ctx, discardLogger(), testConfig(t))
+		db, err := db.Open(ctx, discardLogger(), &testConfig(t).DB)
 		require.NoError(t, err)
 
 		require.NoError(t, db.Connection.Close())

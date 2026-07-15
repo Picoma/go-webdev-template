@@ -34,7 +34,7 @@ func newMemoryDB(t *testing.T) *db.DB {
 	database, err := db.Open(
 		t.Context(),
 		slog.Default(),
-		cfg,
+		&cfg.DB,
 	)
 	require.NoError(t, err)
 

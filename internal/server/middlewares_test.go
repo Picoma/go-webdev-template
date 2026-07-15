@@ -28,7 +28,7 @@ func middlewareTestRouter(t *testing.T) http.Handler {
 
 	return server.NewRouter(
 		slog.New(slog.DiscardHandler),
-		cfg,
+		cfg.WithDebug,
 		&fakeSystemHandler{},
 		&fakeCounterHandler{},
 	)

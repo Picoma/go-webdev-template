@@ -28,7 +28,7 @@ import (
 func TestMigrate(t *testing.T) {
 	ctx := t.Context()
 
-	db, err := db.Open(ctx, discardLogger(), testConfig(t))
+	db, err := db.Open(ctx, discardLogger(), &testConfig(t).DB)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {

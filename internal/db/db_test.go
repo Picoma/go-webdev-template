@@ -53,7 +53,7 @@ func TestOpen(t *testing.T) {
 	t.Run("opens a valid sqlite database", func(t *testing.T) {
 		ctx := t.Context()
 
-		db, err := db.Open(ctx, discardLogger(), testConfig(t))
+		db, err := db.Open(ctx, discardLogger(), &testConfig(t).DB)
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
@@ -72,7 +72,7 @@ func TestOpen(t *testing.T) {
 		cfg := testConfig(t)
 		cfg.DB.Driver = "does-not-exist"
 
-		_, err := db.Open(t.Context(), discardLogger(), cfg)
+		_, err := db.Open(t.Context(), discardLogger(), &cfg.DB)
 
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to open database")
@@ -86,7 +86,7 @@ func TestOpen(t *testing.T) {
 		// A directory is not a valid sqlite database target.
 		cfg.DB.ConnString = t.TempDir()
 
-		_, err := db.Open(t.Context(), discardLogger(), cfg)
+		_, err := db.Open(t.Context(), discardLogger(), &cfg.DB)
 
 		require.Error(t, err)
 		require.ErrorContains(t, err, "failed to open database")
@@ -96,7 +96,7 @@ func TestOpen(t *testing.T) {
 // TestClose verifies the ownership contract of DB.Close:
 // once closed, the underlying SQL connection must no longer accept operations.
 func TestClose(t *testing.T) {
-	db, err := db.Open(t.Context(), discardLogger(), testConfig(t))
+	db, err := db.Open(t.Context(), discardLogger(), &testConfig(t).DB)
 	require.NoError(t, err)
 
 	require.NoError(t, db.Close())

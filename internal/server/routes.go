@@ -3,15 +3,13 @@ package server
 import (
 	"net/http"
 
-	"idp/internal/config"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 func registerRoutes(
 	router chi.Router,
-	cfg *config.Config,
+	debug bool,
 	systemHandler SystemHandler,
 	counterHandler CounterHandler,
 ) {
@@ -19,7 +17,7 @@ func registerRoutes(
 		r.Get("/", http.RedirectHandler("/counter", http.StatusMovedPermanently).ServeHTTP)
 		r.Get("/health", systemHandler.DisplayDBHealth)
 
-		if cfg.WithDebug {
+		if debug {
 			r.Mount("/debug", middleware.Profiler())
 		}
 	})

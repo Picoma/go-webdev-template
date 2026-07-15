@@ -18,7 +18,7 @@ func newMigrateCmd(cfg *config.Config) *cli.Command {
 		Action: func(ctx context.Context, c *cli.Command) error {
 			logger := log.New(c.Writer, cfg)
 
-			db, err := db.Open(ctx, logger, cfg)
+			db, err := db.Open(ctx, logger, &cfg.DB)
 			if err != nil {
 				return fmt.Errorf("error connection to database: %w", err)
 			}

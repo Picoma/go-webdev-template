@@ -23,7 +23,7 @@ type App struct {
 
 // New initializes the app (creating db connection, configuring server).
 func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*App, error) {
-	database, err := db.Open(ctx, logger, cfg)
+	database, err := db.Open(ctx, logger, &cfg.DB)
 	if err != nil {
 		msg := "error opening database"
 		logger.ErrorContext(ctx, msg,
@@ -38,7 +38,7 @@ func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*App, er
 
 	router := server.NewRouter(
 		logger,
-		cfg,
+		cfg.WithDebug,
 		systemHandler,
 		counterHandler,
 	)

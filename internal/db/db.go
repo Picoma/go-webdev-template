@@ -19,20 +19,20 @@ import (
 // DB being the entrypoint for services, he implements [server.HealthChecker].
 type DB struct {
 	Logger *slog.Logger
-	cfg    *config.Config
+	cfg    *config.DB
 
 	Connection *sql.DB
 	Queries    *queries.Queries
 }
 
-func Open(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*DB, error) {
+func Open(ctx context.Context, logger *slog.Logger, cfg *config.DB) (*DB, error) {
 	logger = logger.WithGroup("db").With(
-		slog.String("server.address", cfg.DB.ConnString),
-		slog.String("system.name", cfg.DB.Driver),
+		slog.String("server.address", cfg.ConnString),
+		slog.String("system.name", cfg.Driver),
 	)
 
 	// Open connection
-	sqlDB, err := sql.Open(cfg.DB.Driver, cfg.DB.ConnString)
+	sqlDB, err := sql.Open(cfg.Driver, cfg.ConnString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
