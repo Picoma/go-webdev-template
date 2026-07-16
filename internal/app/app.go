@@ -34,7 +34,7 @@ func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*App, er
 
 	router := server.NewRouter(
 		logger,
-		cfg.WithDebug,
+		cfg,
 		systemHandler,
 		counterHandler,
 	)

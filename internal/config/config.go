@@ -2,6 +2,8 @@ package config
 
 import (
 	"time"
+
+	"github.com/go-chi/httplog/v3"
 )
 
 // Config holds the config schema used throuout the code.
@@ -13,8 +15,9 @@ type Config struct {
 	DB      DB      `json:"db"`
 	Server  Server  `json:"server"`
 
-	WithDebug bool `json:"with_debug"`
-	Verbose   bool `json:"verbose"`
+	WithDebug     bool            `json:"with_debug"`
+	Verbose       bool            `json:"verbose"`
+	LoggingSchema *httplog.Schema `json:"-"`
 }
 
 type Service struct {
@@ -59,7 +62,8 @@ func Defaults(service Service) *Config {
 			IdleTimeout:     time.Minute,
 			ShutdownTimeout: 30 * time.Second,
 		},
-		WithDebug: false, // Set in CLI
-		Verbose:   false, // Set in CLI
+		WithDebug:     false, // Set in CLI
+		Verbose:       false, // Set in CLI
+		LoggingSchema: httplog.SchemaOTEL,
 	}
 }

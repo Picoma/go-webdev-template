@@ -6,8 +6,9 @@ import (
 	"log/slog"
 
 	"idp/internal/db/queries"
+	"idp/internal/log"
 
-	slogchi "github.com/samber/slog-chi"
+	"github.com/go-chi/httplog/v3"
 )
 
 type CounterStore interface {
@@ -29,15 +30,13 @@ func NewCountService(q CounterStore) *CountService {
 
 func (s *CountService) Get(ctx context.Context) (int64, error) {
 	value, err := s.store.GetCounter(ctx)
-
-	// TODO wide events
-	s.logSQLQuery(ctx,
+	httplog.SetAttrs(ctx, log.SQLSchema(
 		queries.GetCounter,
+		"counter",
 		"SELECT",
 		"GetCounter",
-		"1",
-	)
-
+		1,
+	))
 	if err != nil {
 		return 0, fmt.Errorf("error getting counter: %w", err)
 	}
@@ -47,45 +46,16 @@ func (s *CountService) Get(ctx context.Context) (int64, error) {
 
 func (s *CountService) Increment(ctx context.Context) (int64, error) {
 	value, err := s.store.IncrementAndGetCounter(ctx)
-
-	s.logSQLQuery(ctx,
+	httplog.SetAttrs(ctx, log.SQLSchema(
 		queries.IncrementAndGetCounter,
+		"counter",
 		"INSERT",
 		"IncrementAndGetCounter",
-		"1",
-	)
-
+		1,
+	))
 	if err != nil {
 		return 0, fmt.Errorf("error incrementing counter: %w", err)
 	}
 
 	return value, nil
-}
-
-// logSQLQuery is helper
-// TODO replace WE.
-func (*CountService) logSQLQuery(
-	ctx context.Context,
-	queryText string,
-	opName string,
-	procName string,
-	returnedRows string,
-) {
-	slogchi.AddContextAttributes(ctx, slog.Any(
-		"db", map[string]any{
-			"query": map[string]string{
-				"text": queryText,
-			},
-			"namespace": "counter",
-			"operation": map[string]string{
-				"name": opName,
-			},
-			"stored_procedure": map[string]string{
-				"name": procName,
-			},
-			"response": map[string]string{
-				"returned_rows": returnedRows,
-			},
-		}),
-	)
 }

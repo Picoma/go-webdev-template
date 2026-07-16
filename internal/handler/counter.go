@@ -8,7 +8,7 @@ import (
 	"idp/internal/web/templates/components"
 	"idp/internal/web/templates/pages"
 
-	slogchi "github.com/samber/slog-chi"
+	"github.com/go-chi/httplog/v3"
 )
 
 type CounterService interface {
@@ -31,16 +31,18 @@ func NewCounterHandler(cs CounterService) *CounterHandler {
 func (h *CounterHandler) DisplayCounter(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	value, err := h.CountService.Get(ctx)
+	counter, err := h.CountService.Get(ctx)
 	if err != nil {
+		err = httplog.SetError(ctx, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	slogchi.AddCustomAttributes(r,
-		slog.Int64("counter.value", value),
+	httplog.SetAttrs(r.Context(),
+		slog.Any("counter", counter),
 	)
 
-	if err := pages.CounterPage(value).Render(ctx, w); err != nil {
+	if err := pages.CounterPage(counter).Render(ctx, w); err != nil {
+		err = httplog.SetError(ctx, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -48,18 +50,19 @@ func (h *CounterHandler) DisplayCounter(w http.ResponseWriter, r *http.Request) 
 func (h *CounterHandler) IncreaseCounter(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	value, err := h.CountService.Increment(ctx)
-
+	counter, err := h.CountService.Increment(ctx)
 	if err != nil {
+		err = httplog.SetError(ctx, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	slogchi.AddCustomAttributes(r,
-		slog.Int64("counter.value", value),
+	httplog.SetAttrs(r.Context(),
+		slog.Any("counter", counter),
 	)
 
-	if err := components.CounterValue(value).Render(ctx, w); err != nil {
+	if err := components.CounterValue(counter).Render(ctx, w); err != nil {
+		err = httplog.SetError(ctx, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

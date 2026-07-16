@@ -28,14 +28,14 @@ func New(
 // feeding the router directly to a [httptest.ResponseRecorder].
 func NewRouter(
 	logger *slog.Logger,
-	debug bool,
+	cfg *config.Config,
 	systemHandler SystemHandler,
 	counterHandler CounterHandler,
 ) http.Handler {
 	router := chi.NewRouter()
 
-	registerMiddleware(router, logger)
-	registerRoutes(router, debug, systemHandler, counterHandler)
+	registerMiddleware(router, logger, cfg)
+	registerRoutes(router, cfg.WithDebug, systemHandler, counterHandler)
 	web.RegisterStaticRoutes(router)
 
 	return router
