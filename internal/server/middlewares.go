@@ -37,5 +37,5 @@ func registerMiddleware(r chi.Router, logger *slog.Logger) {
 	}
 
 	r.Use(cors.Handler(corsOptions))
-	r.Use(slogchi.NewWithConfig(logger, loggingOptions))
+	r.Use(slogchi.NewWithConfig(logger.WithGroup("http"), loggingOptions))
 }

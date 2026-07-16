@@ -25,11 +25,7 @@ type App struct {
 func New(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*App, error) {
 	database, err := db.Open(ctx, logger, &cfg.DB)
 	if err != nil {
-		msg := "error opening database"
-		logger.ErrorContext(ctx, msg,
-			slog.Any("exception.message", err),
-		)
-		return nil, fmt.Errorf("%s: %w", msg, err)
+		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
 	counterSvc := service.NewCountService(database.Queries)

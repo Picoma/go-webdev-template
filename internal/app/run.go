@@ -35,16 +35,7 @@ func (app *App) Run(ctx context.Context) error {
 	select {
 	case err := <-errCh:
 		if !errors.Is(err, http.ErrServerClosed) {
-			msg := "server failed"
-
-			app.logger.ErrorContext(ctx, msg,
-				slog.Any("exception", map[string]any{
-					"type":    "listen_error",
-					"message": err,
-				}),
-			)
-
-			return fmt.Errorf("%s: %w", msg, err)
+			return fmt.Errorf("server failed: %w", err)
 		}
 
 	case <-ctx.Done():
@@ -55,16 +46,7 @@ func (app *App) Run(ctx context.Context) error {
 		defer cancel()
 
 		if err := app.server.Shutdown(shutdownCtx); err != nil {
-			msg := "requested shutdown failed"
-
-			app.logger.ErrorContext(ctx, msg,
-				slog.Any("exception", map[string]any{
-					"type":    "listen_error",
-					"message": err,
-				}),
-			)
-
-			return fmt.Errorf("%s: %w", msg, err)
+			return fmt.Errorf("requested shutdown failed: %w", err)
 		}
 	}
 
