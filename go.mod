@@ -7,6 +7,7 @@ require (
 	github.com/a-h/templ v0.3.1020
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
+	github.com/lmittmann/tint v1.1.3
 	github.com/mattn/go-sqlite3 v1.14.47
 	github.com/pressly/goose/v3 v3.27.2
 	github.com/samber/slog-chi v1.19.1

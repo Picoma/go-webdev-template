@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os/signal"
 	"syscall"
-
-	"idp/internal/log"
 )
 
 // Run runs the app through its server.
@@ -18,9 +16,12 @@ func (app *App) Run(ctx context.Context) error {
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	log.AddContextAttrs(ctx,
-		slog.String("server.address", app.server.Addr),
-		slog.String("server.status", "open"),
+	// TODO replace wide events
+	app.logger = app.logger.With(
+		slog.Any("server", map[string]any{
+			"address": app.server.Addr,
+			"status":  "open",
+		}),
 	)
 
 	errCh := make(chan error, 1)

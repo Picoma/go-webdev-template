@@ -9,7 +9,6 @@ import (
 	"idp/internal/config"
 	"idp/internal/db/migrations"
 	"idp/internal/db/queries"
-	"idp/internal/log"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite drivers
 	"github.com/pressly/goose/v3"
@@ -27,9 +26,9 @@ type DB struct {
 }
 
 func Open(ctx context.Context, logger *slog.Logger, cfg *config.DB) (*DB, error) {
-	log.AddContextAttrs(ctx,
-		slog.String("db.conn_string", cfg.ConnString),
-		slog.String("db.driver", cfg.Driver),
+	logger = logger.WithGroup("db").With(
+		slog.String("conn_string", cfg.ConnString),
+		slog.String("driver", cfg.Driver),
 	)
 
 	// Open connection
@@ -68,12 +67,13 @@ func Open(ctx context.Context, logger *slog.Logger, cfg *config.DB) (*DB, error)
 	if err != nil {
 		return nil, fmt.Errorf("error checking pending migrations: %w", err)
 	}
-	log.AddContextAttrs(ctx,
-		slog.Int64("db.schema.current", currentVersion),
-		slog.Int64("db.schema.target", targetVersion),
-	)
 	if currentVersion != targetVersion {
-		logger.WarnContext(ctx, "pending migrations ; app may behave incorrectly.")
+		logger.WarnContext(ctx, "pending migrations ; app may behave incorrectly.",
+			slog.Group("schema",
+				slog.Int64("schema.current", currentVersion),
+				slog.Int64("schema.target", targetVersion),
+			),
+		)
 	}
 
 	success = true

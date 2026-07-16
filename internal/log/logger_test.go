@@ -17,7 +17,6 @@ package log_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"log/slog"
 	"testing"
@@ -47,18 +46,23 @@ func TestNew_JSONLogger(t *testing.T) {
 	tests := []struct {
 		name      string
 		configure func(*config.Config)
-		log       func(context.Context, *slog.Logger)
+		log       func(*slog.Logger)
 		assert    func(t *testing.T, record map[string]any)
 	}{
 		{
 			name: "attaches service metadata",
-			log: func(ctx context.Context, logger *slog.Logger) {
-				logger.InfoContext(ctx, "startup")
+			log: func(logger *slog.Logger) {
+				logger.Info("startup")
 			},
 			assert: func(t *testing.T, record map[string]any) {
-				require.Contains(t,
-					record,
-					"service.name",
+				require.Equal(t,
+					map[string]any{
+						"name":        "idp_test",
+						"version":     "1.2.3",
+						"hash_commit": "abcdef",
+						"env":         "test",
+					},
+					record["service"],
 				)
 			},
 		},
@@ -69,18 +73,17 @@ func TestNew_JSONLogger(t *testing.T) {
 			t.Parallel()
 
 			var output bytes.Buffer
-
 			cfg := testConfig()
 			if tt.configure != nil {
 				tt.configure(cfg)
 			}
 
-			ctx, logger := log.NewWithContext(t.Context(), &output, cfg)
-			tt.log(ctx, logger)
+			logger := log.New(&output, cfg)
+			tt.log(logger)
 
 			var record map[string]any
-
-			require.NoError(t,
+			require.NoError(
+				t,
 				json.Unmarshal(output.Bytes(), &record),
 			)
 
@@ -95,30 +98,30 @@ func TestNewLogLevelFiltering(t *testing.T) {
 	tests := []struct {
 		name       string
 		verbose    bool
-		log        func(context.Context, *slog.Logger)
+		log        func(*slog.Logger)
 		wantOutput bool
 	}{
 		{
 			name:    "debug hidden when verbose disabled",
 			verbose: false,
-			log: func(ctx context.Context, logger *slog.Logger) {
-				logger.DebugContext(ctx, "debug message")
+			log: func(logger *slog.Logger) {
+				logger.Debug("debug message")
 			},
 			wantOutput: false,
 		},
 		{
 			name:    "debug visible when verbose enabled",
 			verbose: true,
-			log: func(ctx context.Context, logger *slog.Logger) {
-				logger.DebugContext(ctx, "debug message")
+			log: func(logger *slog.Logger) {
+				logger.Debug("debug message")
 			},
 			wantOutput: true,
 		},
 		{
 			name:    "info always visible",
 			verbose: false,
-			log: func(ctx context.Context, logger *slog.Logger) {
-				logger.InfoContext(ctx, "info message")
+			log: func(logger *slog.Logger) {
+				logger.Info("info message")
 			},
 			wantOutput: true,
 		},
@@ -133,9 +136,9 @@ func TestNewLogLevelFiltering(t *testing.T) {
 
 			var output bytes.Buffer
 
-			ctx, logger := log.NewWithContext(t.Context(), &output, cfg)
+			logger := log.New(&output, cfg)
 
-			tt.log(ctx, logger)
+			tt.log(logger)
 
 			if tt.wantOutput {
 				require.NotEmpty(t, output.String())
