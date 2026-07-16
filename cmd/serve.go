@@ -42,7 +42,7 @@ func newServeCmd(cfg *config.Config) *cli.Command {
 			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
-			logger := log.New(c.Writer, cfg)
+			ctx, logger := log.NewWithContext(ctx, c.Writer, cfg)
 
 			application, err := app.New(ctx, logger, cfg)
 			if err != nil {
