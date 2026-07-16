@@ -4,37 +4,41 @@ import (
 	"time"
 )
 
+// Config holds the config schema used throuout the code.
+//
+// Instanciate using [Defaults].
+// JSON tags present to serialize in structured logging.
+type Config struct {
+	Service Service `json:"-"`
+	DB      DB      `json:"db"`
+	Server  Server  `json:"server"`
+
+	WithDebug bool `json:"with_debug"`
+	Verbose   bool `json:"verbose"`
+}
+
 type Service struct {
-	Name        string
-	Description string
-	Version     string
-	Env         string
-	HashCommit  string
+	Name        string `json:"name"`
+	Description string `json:"-"`
+	Version     string `json:"version"`
+	Env         string `json:"env"`
+	HashCommit  string `json:"hash_commit"`
 }
 
 type DB struct {
-	ConnString                     string
-	Driver                         string
-	HealthyOpenConnectionThreshold int
-	HealthyWaitCountThreshold      int
+	ConnString                     string `json:"conn_string"`
+	Driver                         string `json:"driver"`
+	HealthyOpenConnectionThreshold int    `json:"healthy_open_connection_threshold"`
+	HealthyWaitCountThreshold      int    `json:"healthy_wait_count_threshold"`
 }
 
 type Server struct {
-	BindAddress     string
-	Port            int
-	ReadTimeout     time.Duration
-	WriteTimeout    time.Duration
-	IdleTimeout     time.Duration
-	ShutdownTimeout time.Duration
-}
-
-type Config struct {
-	Service Service
-	DB      DB
-	Server  Server
-
-	WithDebug bool
-	Verbose   bool
+	BindAddress     string        `json:"bind_address"`
+	Port            int           `json:"port"`
+	ReadTimeout     time.Duration `json:"read_timeout_ns"`
+	WriteTimeout    time.Duration `json:"write_timeout_ns"`
+	IdleTimeout     time.Duration `json:"idle_timeout_ns"`
+	ShutdownTimeout time.Duration `json:"shutdown_timeout_ns"`
 }
 
 func Defaults(service Service) *Config {

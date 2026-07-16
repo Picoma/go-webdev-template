@@ -26,11 +26,6 @@ type DB struct {
 }
 
 func Open(ctx context.Context, logger *slog.Logger, cfg *config.DB) (*DB, error) {
-	logger = logger.WithGroup("db").With(
-		slog.String("conn_string", cfg.ConnString),
-		slog.String("driver", cfg.Driver),
-	)
-
 	// Open connection
 	sqlDB, err := sql.Open(cfg.Driver, cfg.ConnString)
 	if err != nil {
@@ -69,10 +64,8 @@ func Open(ctx context.Context, logger *slog.Logger, cfg *config.DB) (*DB, error)
 	}
 	if currentVersion != targetVersion {
 		logger.WarnContext(ctx, "pending migrations ; app may behave incorrectly.",
-			slog.Group("schema",
-				slog.Int64("schema.current", currentVersion),
-				slog.Int64("schema.target", targetVersion),
-			),
+			slog.Int64("db.schema.current", currentVersion),
+			slog.Int64("db.schema.target", targetVersion),
 		)
 	}
 

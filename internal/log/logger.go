@@ -18,14 +18,10 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 		Level:     level,
 	})
 
-	logger := slog.New(handler).With(slog.Any(
-		"service", map[string]string{
-			"name":        cfg.Service.Name,
-			"version":     cfg.Service.Version,
-			"hash_commit": cfg.Service.HashCommit,
-			"env":         cfg.Service.Env,
-		}))
-	slog.SetDefault(logger)
+	logger := slog.New(handler).With(
+		slog.Any("service", cfg.Service),
+		slog.Any("config", cfg),
+	)
 
 	return logger
 }

@@ -14,7 +14,7 @@ var (
 	name        = "idp"
 	description = "Runs a web server serving HTMX"
 	version     = "v0.0.1-a1fa420"
-	commit      = "123456"
+	commit      = "1ea23456"
 	env         = "development"
 )
 
