@@ -64,8 +64,10 @@ func Open(ctx context.Context, logger *slog.Logger, cfg *config.DB) (*DB, error)
 	}
 	if currentVersion != targetVersion {
 		logger.WarnContext(ctx, "pending migrations ; app may behave incorrectly.",
-			slog.Int64("db.schema.current", currentVersion),
-			slog.Int64("db.schema.target", targetVersion),
+			slog.Group("db",
+				slog.Int64("schema.current", currentVersion),
+				slog.Int64("schema.target", targetVersion),
+			),
 		)
 	}
 

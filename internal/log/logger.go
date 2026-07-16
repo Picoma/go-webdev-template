@@ -14,8 +14,9 @@ func New(w io.Writer, cfg *config.Config) *slog.Logger {
 	}
 
 	handler := slog.NewJSONHandler(w, &slog.HandlerOptions{
-		AddSource: cfg.Verbose,
-		Level:     level,
+		Level:       level,
+		AddSource:   cfg.Verbose,
+		ReplaceAttr: cfg.LoggingSchema.ReplaceAttr,
 	})
 
 	logger := slog.New(handler).With(

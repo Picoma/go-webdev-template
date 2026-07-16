@@ -6,6 +6,12 @@ import (
 	"github.com/go-chi/httplog/v3"
 )
 
+func schema() *httplog.Schema {
+	s := httplog.SchemaOTEL
+	s.GroupDelimiter = "."
+	return s
+}
+
 // Config holds the config schema used throuout the code.
 //
 // Instanciate using [Defaults].
@@ -64,6 +70,6 @@ func Defaults(service Service) *Config {
 		},
 		WithDebug:     false, // Set in CLI
 		Verbose:       false, // Set in CLI
-		LoggingSchema: httplog.SchemaOTEL,
+		LoggingSchema: schema(),
 	}
 }
